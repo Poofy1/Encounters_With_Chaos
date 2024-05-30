@@ -17,6 +17,7 @@ Shader "Unlit/HenonMap"
 
         Pass
         {
+            cull off
             CGPROGRAM
             #pragma vertex vert
             #pragma fragment frag
@@ -79,8 +80,8 @@ Shader "Unlit/HenonMap"
 
                     trap = min(trap, float4(abs(z.xyz), dot(z, z)));
                     mz2 = dot(z.xy, z.xy);
-                    if (mz2 > 5.0) break;
-                    n += 1.0;
+                    if (mz2 > 50.0) break;
+                    n += .25;
                 }
 
                 oTrap = trap;
@@ -90,7 +91,7 @@ Shader "Unlit/HenonMap"
 
             float3 calcNormal(float3 p, float4 c)
             {
-                const float eps = 0.001;
+                const float eps = 0.00001;
                 float4 trap;
                 float3 n = float3(
                     map(float3(p.x + eps, p.y, p.z), trap, c) - map(float3(p.x - eps, p.y, p.z), trap, c),
@@ -105,13 +106,13 @@ Shader "Unlit/HenonMap"
             {
                 float4 tmp;
                 float resT = -1.0;
-                float maxd = 20.0;
+                float maxd = 200.0;
                 float h = 1.0;
                 float t = 0.0;
                 
                 for (int i = 0; i < 300; i++)
                 {
-                    if (h < 0.0001 || t > maxd) break;
+                    if (h < 0.00001 || t > maxd) break;
                     h = map(ro + rd * t, tmp, c);
                     t += h;
                 }
@@ -133,14 +134,15 @@ Shader "Unlit/HenonMap"
 
                 if (t > 0.0)
                 {
-                    float3 mate = float3(1.0, 0.8, 0.7) * 0.3;
                     float3 pos = ro + t * rd;
                     float3 nor = calcNormal(pos, c);
                     float occ = clamp(2.5 * tra.w - 0.15, 0.0, 1.0);
                     
                     const float3 lig = float3(-0.707, 0.000, -0.707);
                     float dif = clamp(0.5 + 0.5 * dot(lig, nor), 0.0, 1.0);
-                    col += mate * 1.5 * _LineColor * dif * occ;
+
+                    float3 spec = cos(tra.w * float3(1, 1, 0.3));
+                    col += spec * 1.5 * _LineColor * dif * occ;
                 }
                 
                 return col;

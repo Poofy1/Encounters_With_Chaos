@@ -7,8 +7,8 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: Cantor
-  m_Shader: {fileID: 4800000, guid: 7dacb80ce270aeb4c9aa9c735543ef6f, type: 3}
+  m_Name: Julia Set
+  m_Shader: {fileID: 4800000, guid: 9f4c4c0a69a2f2b4181e9cac10478890, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []
@@ -61,19 +61,24 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
-    - _AA: -25.2
-    - _AAWidth: 21.56
-    - _AntialiasWidth: -71.31
-    - _Blur: 0.03
+    - _A: 1.37
+    - _B: -0.97
     - _BumpScale: 1
+    - _Coefficient1: 0.045
+    - _Coefficient2: 0.898
+    - _Coefficient3: 1
+    - _CurveAmplitude: 0.1
+    - _CurveFrequency: 0
+    - _CurveScale: 0.7885
+    - _CurveScaleX: -1.23
+    - _CurveScaleY: -0.112
     - _Cutoff: 0.5
     - _DetailNormalMapScale: 1
     - _DstBlend: 0
     - _GlossMapScale: 1
     - _Glossiness: 0.5
     - _GlossyReflections: 1
-    - _Iterations: 4
-    - _LineWidth: 0.025
+    - _Iterations: 208.59
     - _Metallic: 0
     - _Mode: 0
     - _OcclusionStrength: 1
@@ -81,13 +86,13 @@ Material:
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 1
     - _SrcBlend: 1
+    - _Thickness: 0.0498
     - _UVSec: 0
     - _ZWrite: 1
-    - test1: 0.5
-    - test2: 2.86
+    - _Zoom: 4.53
     m_Colors:
-    - _BackgroundColor: {r: 0, g: 0, b: 0, a: 1}
-    - _Color: {r: 1, g: 1, b: 1, a: 1}
+    - _Color: {r: 1, g: 0, b: 0, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _LineColor: {r: 1, g: 0, b: 0, a: 1}
+    - _Offset: {r: 0, g: 0, b: 0, a: 0}
   m_BuildTextureStacks: []

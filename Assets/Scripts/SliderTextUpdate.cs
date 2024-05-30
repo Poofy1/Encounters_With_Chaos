@@ -41,6 +41,12 @@ public class SliderTextUpdater : MonoBehaviour
             formatString = "F0";
         }
 
+        // Handle the case where the number is negative
+        if (value < 0f)
+        {
+            formatString = "F1";
+        }
+
         // Update the text of the handle with the slider's value
         handleText.text = value.ToString(formatString);
     }

@@ -61,8 +61,8 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
-    - _A: 1.37
-    - _B: -0.97
+    - _A: -0.3
+    - _B: 1.4
     - _BumpScale: 1
     - _Cutoff: 0.5
     - _DetailNormalMapScale: 1
@@ -70,7 +70,7 @@ Material:
     - _GlossMapScale: 1
     - _Glossiness: 0.5
     - _GlossyReflections: 1
-    - _Iterations: 11
+    - _Iterations: 10.766667
     - _Metallic: 0
     - _Mode: 0
     - _OcclusionStrength: 1
@@ -81,10 +81,10 @@ Material:
     - _Thickness: 0.0498
     - _UVSec: 0
     - _ZWrite: 1
-    - _Zoom: 4.53
+    - _Zoom: 2.36
     m_Colors:
     - _Color: {r: 1, g: 1, b: 1, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
-    - _LineColor: {r: 1, g: 0, b: 0, a: 1}
+    - _LineColor: {r: 0.98873615, g: 0, b: 1, a: 1}
     - _Offset: {r: 0, g: 0, b: 0, a: 0}
   m_BuildTextureStacks: []
