@@ -56,25 +56,27 @@ Shader "Unlit/JuliaSet"
                 }
                 return _Iterations;
             }
+            
 
-            float scene(float2 z, float2 c)
+            float3 colorSurface(float dist)
             {
-                float dist = float(_Iterations) - float(julia_iters(z, c));
-                float coef = pow(dist / float(_Iterations), 10);
-                return coef;
+                float3 col = 0.5 + 0.5 * cos(log2(dist) + 1.5 + float3(0.0, 0.6, 1.0));
+                float inside = smoothstep(14.0, 15.0, dist);
+                col *= float3(0.45, 0.42, 0.40) + float3(0.55, 0.0, 0.60) * inside;
+                col = lerp(col * col * (3.0 - 2.0 * col), col, inside);
+                return clamp(col * 0.65, 0.0, 1.0);
             }
 
-            
             fixed4 frag(v2f i) : SV_Target
             {
                 float2 z = 3 * (i.uv - 0.5);
                 float2 c = float2(_CurveScaleX, _CurveScaleY);
                 
-                float coef = scene(z, c);
+                float dist = float(julia_iters(z, c));
 
-                float4 col = lerp(0, _Color, coef);
+                float3 col = colorSurface(dist);
 
-                return col;
+                return float4(col, 1.0);
             }
             ENDCG
         }
