@@ -1,7 +1,11 @@
 using UnityEngine;
+using UnityEngine.UI;
 
 public class LorenzAttractor : MonoBehaviour
 {
+    public Slider sigSlider;
+    public Slider betaSlider;
+    
     public float rho = 28.0f;
     public float sigma = 10.0f;
     public float beta = 8.0f / 3.0f;
@@ -41,12 +45,15 @@ public class LorenzAttractor : MonoBehaviour
         startPositions = new Vector3[numLines];
         trailRenderers = new TrailRenderer[numLines];
 
+        // Choose a random color scheme
+        Color[] colorScheme = GetRandomColorScheme();
+
         for (int i = 0; i < numLines; i++)
         {
             GameObject line = new GameObject("Line " + i);
             line.transform.parent = transform;
 
-            startPositions[i] = new Vector3(-1, Random.Range(-3f, 3f), Random.Range(-3f, 3f));
+            startPositions[i] = new Vector3(0, Random.Range(-1f, 1f), 15);
             line.transform.localPosition = startPositions[i] * scale;
             
             trailRenderers[i] = line.AddComponent<TrailRenderer>();
@@ -55,19 +62,13 @@ public class LorenzAttractor : MonoBehaviour
             trailRenderers[i].endWidth = trailWidth; // Set the tail end width to the original thickness
             trailRenderers[i].material = new Material(Shader.Find("Sprites/Default"));
 
+            // Determine the color based on the random y position
+            float t = (startPositions[i].y + 1) / 2;
+            Color startColor = Color.Lerp(colorScheme[0], colorScheme[1], t);
+            Color endColor = new Color(startColor.r, startColor.g, startColor.b, 0f);
+
             // Create a new gradient for each line
             Gradient gradient = new Gradient();
-
-            // Set the starting color based on the starting position
-            Color startColor = new Color(
-                Mathf.Clamp01(startPositions[i].x),
-                Mathf.Clamp01(startPositions[i].y),
-                Mathf.Clamp01(startPositions[i].z),
-                1f
-            );
-
-            // Set the end color to be fully transparent
-            Color endColor = new Color(startColor.r, startColor.g, startColor.b, 0f);
 
             // Set the color keys of the gradient
             GradientColorKey[] colorKeys = new GradientColorKey[2];
@@ -93,6 +94,22 @@ public class LorenzAttractor : MonoBehaviour
         }
     }
 
+    private Color[] GetRandomColorScheme()
+    {
+        Color[] colorSchemes = new Color[]
+        {
+            new Color(1f, 0f, 0f),  // Red
+            new Color(0f, 1f, 0f),  // Green
+            new Color(0f, 0f, 1f),  // Blue
+            new Color(1f, 1f, 0f),  // Yellow
+            new Color(1f, 0f, 1f),  // Magenta
+            new Color(0f, 1f, 1f)   // Cyan
+        };
+
+        int index = Random.Range(0, colorSchemes.Length);
+        return new Color[] { colorSchemes[index], Color.white };
+    }
+
     private void Update()
     {
         for (int i = 0; i < numLines; i++)
@@ -113,4 +130,16 @@ public class LorenzAttractor : MonoBehaviour
             trailRenderers[i].transform.position = currentPosition * scale + offset;
         }
     }
+    
+    
+    public void ChangeSig()
+    {
+        sigma = sigSlider.value;
+    }
+    
+    public void ChangeBeta()
+    {
+        beta = betaSlider.value;
+    }
+    
 }

@@ -5,7 +5,8 @@ Shader "Unlit/HenonMap"
         _A ("A", Float) = 1.4
         _B ("B", Float) = 0.3
         _Iterations ("Iterations", Int) = 50
-        _LineColor ("Line Color", Color) = (0, 0, 0, 1)
+        _Color1 ("_Color1", Color) = (0, 0, 0, 1)
+        _Color2 ("_Color2", Color) = (0, 0, 0, 1)
         _Zoom ("Zoom", Float) = 1.0
         _Offset ("Offset", Vector) = (0, 0, 0, 0)
         _Thickness ("Thickness", Range(0.001, 0.1)) = 0.005
@@ -42,7 +43,8 @@ Shader "Unlit/HenonMap"
             float _Zoom;
             float2 _Offset;
             float _Thickness;
-            float4 _LineColor;
+            float4 _Color1;
+            float4 _Color2;
 
             v2f vert (appdata v)
             {
@@ -52,114 +54,66 @@ Shader "Unlit/HenonMap"
                 return o;
             }
 
-            float map(float3 p, out float4 oTrap, float4 c)
+            float scene(float3 pos, out float4 trapOut, float4 c)
             {
-                float4 z = float4(p, 0.0);
-                float mz2 = dot(z, z);
-                float4x4 J = float4x4(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
-                float4 trap = float4(abs(z.xyz), dot(z, z));
-                float n = 1.0;
-
+                float4 zVec = float4(pos, 0.0);
+                float magSqr = dot(zVec, zVec);
+                float4x4 jacobian = float4x4(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+                trapOut = float4(abs(zVec.xyz), dot(zVec, zVec));
+                float iterCount = 1.0;
+                float2 invBinomial = float2(c.x, -c.y) / (c.x * c.x + c.y * c.y);
+                
                 for (int i = 0; i < _Iterations; i++)
                 {
-                    float2 binv = float2(c.x, -c.y)/(c.x*c.x+c.y*c.y);
-                    J = mul(J, float4x4(0, 0, 1, 0,
-                                         0, 0, 0, 1,
-					                     binv.x, -binv.y,
-                                           -2.0*(z.z*binv.x - z.w*binv.y),
-                                           2.0*(z.z*binv.y+z.w*binv.x),
-                                         binv.y, binv.x,
-                                           -2.0*(z.z*binv.y+z.w*binv.x),
-                                           -2.0*(z.z*binv.x - z.w*binv.y)));
+                    jacobian = mul(jacobian, float4x4(0, 0, 1, 0,
+                                                       0, 0, 0, 1,
+                                                       invBinomial.x, -invBinomial.y,
+                                                       -2.0 * (zVec.z * invBinomial.x - zVec.w * invBinomial.y),
+                                                       2.0 * (zVec.z * invBinomial.y + zVec.w * invBinomial.x),
+                                                       invBinomial.y, invBinomial.x,
+                                                       -2.0 * (zVec.z * invBinomial.y + zVec.w * invBinomial.x),
+                                                       -2.0 * (zVec.z * invBinomial.x - zVec.w * invBinomial.y)));
 
-                    float2 tmp = float2(z.x - z.z*z.z+z.w*z.w - c.z,
-                        z.y - 2.0*z.z*z.w - c.w);
-                    z = float4(z.z, z.w,
-                             tmp.x*binv.x - tmp.y*binv.y,
-                             tmp.x*binv.y + tmp.y*binv.x);
+                    float2 tempVals = float2(zVec.x - zVec.z * zVec.z + zVec.w * zVec.w - c.z,
+                                             zVec.y - 2.0 * zVec.z * zVec.w - c.w);
+                    
+                    zVec = float4(zVec.z, zVec.w,
+                                  tempVals.x * invBinomial.x - tempVals.y * invBinomial.y,
+                                  tempVals.x * invBinomial.y + tempVals.y * invBinomial.x);
 
-                    trap = min(trap, float4(abs(z.xyz), dot(z, z)));
-                    mz2 = dot(z.xy, z.xy);
-                    if (mz2 > 50.0) break;
-                    n += .25;
+                    trapOut = min(trapOut, float4(abs(zVec.xyz), dot(zVec, zVec)));
+                    magSqr = dot(zVec.xy, zVec.xy);
+                    if (magSqr > 50.0) break;
+                    iterCount += 0.25;
                 }
-
-                oTrap = trap;
-                float md2 = J[0][0] * J[0][0] + J[0][1] * J[0][1];
-                return 0.25 * sqrt(mz2 / md2) * exp2(-n) * log(mz2);
+                
+                float jacDet = jacobian[0][0] * jacobian[0][0] + jacobian[0][1] * jacobian[0][1];
+                return 0.25 * sqrt(magSqr / jacDet) * exp2(-iterCount) * log(magSqr);
             }
 
             float3 calcNormal(float3 p, float4 c)
             {
-                const float eps = 0.00001;
+                const float2 eps = float2(0.0001, 0.0);
                 float4 trap;
                 float3 n = float3(
-                    map(float3(p.x + eps, p.y, p.z), trap, c) - map(float3(p.x - eps, p.y, p.z), trap, c),
-                    map(float3(p.x, p.y + eps, p.z), trap, c) - map(float3(p.x, p.y - eps, p.z), trap, c),
-                    map(float3(p.x, p.y, p.z + eps), trap, c) - map(float3(p.x, p.y, p.z - eps), trap, c)
+                    scene(p + eps.xyy, trap, c) - scene(p - eps.xyy, trap, c),
+                    scene(p + eps.yxy, trap, c) - scene(p - eps.yxy, trap, c),
+                    scene(p + eps.yyx, trap, c) - scene(p - eps.yyx, trap, c)
                 );
+                
                 return normalize(n);
             }
 
 
-            float intersect(float3 ro, float3 rd, out float4 res, float4 c)
-            {
-                float4 tmp;
-                float resT = -1.0;
-                float maxd = 200.0;
-                float h = 1.0;
-                float t = 0.0;
-                
-                for (int i = 0; i < 300; i++)
-                {
-                    if (h < 0.00001 || t > maxd) break;
-                    h = map(ro + rd * t, tmp, c);
-                    t += h;
-                }
-                
-                if (t < maxd)
-                {
-                    resT = t;
-                    res = tmp;
-                }
-                
-                return resT;
-            }
-
-            float3 render(float3 ro, float3 rd, float4 c)
-            {
-                float4 tra;
-                float3 col = 0;
-                float t = intersect(ro, rd, tra, c);
-
-                if (t > 0.0)
-                {
-                    float3 pos = ro + t * rd;
-                    float3 nor = calcNormal(pos, c);
-                    float occ = clamp(2.5 * tra.w - 0.15, 0.0, 1.0);
-                    
-                    const float3 lig = float3(-0.707, 0.000, -0.707);
-                    float dif = clamp(0.5 + 0.5 * dot(lig, nor), 0.0, 1.0);
-
-                    float3 spec = cos(tra.w * float3(1, 1, 0.3));
-                    col += spec * 1.5 * _LineColor * dif * occ;
-                }
-                
-                return col;
-            }
-
+            
             fixed4 frag (v2f o) : SV_Target
             {
                 float2 uv = o.uv * 2 - 1;
-                float time = _Time.y * 0;
-                float4 c = float4(_A, _B, 1, 1);
-
+                
                 float r = 2;
-                float3 ro = float3(r * cos(0.3 + 0.37 * time),
-                                   5.3 + 0.8 * r * cos(1.0 + 0.33 * time),
-                                   r * cos(2.2 + 0.31 * time));
-
-                float3 col = 0;
+                float3 ro = float3(r * 0.955,
+                                   5.3 + 0.8 * r * 0.540,
+                                   r * -0.943);
                 
                 // Apply zoom to the UV coordinates
                 float2 p = uv * _Zoom;
@@ -170,7 +124,41 @@ Shader "Unlit/HenonMap"
                 float3 cv = normalize(cross(cu, cw));
                 float3 rd = normalize(p.x * cu + p.y * cv + 2.0 * cw);
                 
-                col += render(ro, rd, c);
+                float3 col = 0;
+                float4 c = float4(_A, _B, 1, 1);
+                float4 trap;
+                float maxd = 20.0;
+                float h = 1.0;
+                float t = 0.0;
+                float a = 0.0;
+                
+                for (int i = 0; i < 150; i++)
+                {
+                    if (h < 0.0001 || t > maxd) break;
+                    h = scene(ro + rd * a, trap, c);
+                    a += h;
+                }
+
+                // Coloring
+                if (a > 0.0 && a < maxd)
+                {
+                    float3 pos = ro + a * rd;
+                    float3 nor = calcNormal(pos, c);
+                    float occ = clamp(trap.w, 0.0, 1.0);
+                    
+                    const float3 lig = normalize(float3(-0.5, 0.5, -0.5));
+                    float dif = clamp(dot(lig, nor), 0.0, 1.0);
+                    float amb = 0.2;
+
+                    float3 ref = reflect(rd, nor);
+                    float fre = clamp(1.0 - dot(nor, -rd), 0.0, 1.0);
+                    float spe = pow(clamp(dot(ref, lig), 0.0, 1.0), 20.0);
+
+                    float3 mat = lerp(_Color1, _Color2, fre);
+
+                    col += mat * (amb + dif * occ);
+                    col += spe * occ;
+                }
                 
                 return fixed4(col, 1.0);
             }
