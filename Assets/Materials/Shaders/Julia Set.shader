@@ -3,7 +3,6 @@ Shader "Unlit/JuliaSet"
     Properties
     {
         _Iterations ("Iterations", Int) = 100
-        _Color ("Color", Color) = (0.3, 0.3, 0.3, 1)
         _CurveScaleX ("Curve Scale X", Float) = 0.7885
         _CurveScaleY ("Curve Scale Y", Float) = 0.7885
     }
@@ -60,11 +59,11 @@ Shader "Unlit/JuliaSet"
 
             float3 colorSurface(float dist)
             {
-                float3 col = 0.5 + 0.5 * cos(log2(dist) + 1.5 + float3(0.0, 0.6, 1.0));
+                float3 col = 0.5 + 0.5 * cos(log2(dist) + 1.5 + float3(0.0, 0.6, 1.0) + _Time.y * 0.3);
                 float inside = smoothstep(14.0, 15.0, dist);
-                col *= float3(0.45, 0.42, 0.40) + float3(0.55, 0.0, 0.60) * inside;
+                col *= float3(0.1, 0.0, .9) + float3(0.9, 0.0, .1) * inside;
                 col = lerp(col * col * (3.0 - 2.0 * col), col, inside);
-                return clamp(col * 0.65, 0.0, 1.0);
+                return clamp(col * .8, 0.0, 1.0);
             }
 
             fixed4 frag(v2f i) : SV_Target
