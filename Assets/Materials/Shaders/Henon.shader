@@ -4,6 +4,8 @@ Shader "Unlit/HenonMap"
     {
         _A ("A", Float) = 1.4
         _B ("B", Float) = 0.3
+        _C ("C", Float) = 1
+        _D ("D", Float) = 1
         _Iterations ("Iterations", Int) = 50
         _Color1 ("_Color1", Color) = (0, 0, 0, 1)
         _Color2 ("_Color2", Color) = (0, 0, 0, 1)
@@ -39,6 +41,8 @@ Shader "Unlit/HenonMap"
 
             float _A;
             float _B;
+            float _C;
+            float _D;
             int _Iterations;
             float _Zoom;
             float2 _Offset;
@@ -125,7 +129,7 @@ Shader "Unlit/HenonMap"
                 float3 rd = normalize(p.x * cu + p.y * cv + 2.0 * cw);
                 
                 float3 col = 0;
-                float4 c = float4(_A, _B, 1, 1);
+                float4 c = float4(_A, _B, _C, _D);
                 float4 trap;
                 float maxd = 20.0;
                 float h = 1.0;

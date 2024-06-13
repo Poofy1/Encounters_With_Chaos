@@ -5,6 +5,7 @@ public class LorenzAttractor : MonoBehaviour
 {
     public Slider sigSlider;
     public Slider betaSlider;
+    public Slider rhoSlider;
     
     public float rho = 28.0f;
     public float sigma = 10.0f;
@@ -140,6 +141,26 @@ public class LorenzAttractor : MonoBehaviour
     public void ChangeBeta()
     {
         beta = betaSlider.value;
+    }
+    
+    public void ChangeRho()
+    {
+        rho = rhoSlider.value;
+    }
+    
+    public void RandomizeParameters()
+    {
+        // Randomly select values for sigma, beta, and rho within their respective ranges
+        sigSlider.value = Random.Range(sigSlider.minValue, sigSlider.maxValue);
+        betaSlider.value = Random.Range(betaSlider.minValue, betaSlider.maxValue);
+        rhoSlider.value = Random.Range(rhoSlider.minValue, rhoSlider.maxValue);
+
+        // Update the corresponding values in the script
+        ChangeSig();
+        ChangeBeta();
+        ChangeRho();
+
+        Respawn();
     }
     
 }
