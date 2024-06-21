@@ -25,26 +25,34 @@ public class SliderTextUpdater : MonoBehaviour
     {
         string formatString;
 
-        if (slider.maxValue < 10f)
+        if (slider.wholeNumbers)
         {
-            // Display 2 decimal places if max value is 1 or less
-            formatString = "F2";
-        }
-        else if (slider.maxValue < 100f)
-        {
-            // Display 1 decimal place if max value is between 1 and 2
-            formatString = "F1";
+            // If the slider is in integer mode, use no decimal places
+            formatString = "F0";
         }
         else
         {
-            // Display no decimal places if max value is greater than 2
-            formatString = "F0";
-        }
+            if (slider.maxValue < 10f)
+            {
+                // Display 2 decimal places if max value is less than 10
+                formatString = "F2";
+            }
+            else if (slider.maxValue < 100f)
+            {
+                // Display 1 decimal place if max value is between 10 and 100
+                formatString = "F1";
+            }
+            else
+            {
+                // Display no decimal places if max value is 100 or greater
+                formatString = "F0";
+            }
 
-        // Handle the case where the number is negative
-        if (value < 0f)
-        {
-            formatString = "F1";
+            // Handle the case where the number is negative
+            if (value < 0f)
+            {
+                formatString = "F1";
+            }
         }
 
         // Update the text of the handle with the slider's value
