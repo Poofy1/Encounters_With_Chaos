@@ -1,4 +1,6 @@
+using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 public class LorenzAttractor : MonoBehaviour
@@ -21,11 +23,21 @@ public class LorenzAttractor : MonoBehaviour
     private Vector3[] startPositions;
     private TrailRenderer[] trailRenderers;
     
+    public float spawnZ = 10f; // Constant Z value for spawning
+    public int maxTrails = 10; // Maximum number of trails
+    private List<TrailRenderer> dynamicTrails = new List<TrailRenderer>();
+    private List<Vector3> dynamicPositions = new List<Vector3>();
+    private Camera mainCamera;
+    
+    
+    
     private Vector3[] currentPositions;
     Vector3 offset = new Vector3(300, 0, 0);
     
     private void Start()
     {
+        mainCamera = Camera.main;
+        
         Respawn();
     }
 
@@ -42,6 +54,8 @@ public class LorenzAttractor : MonoBehaviour
                 }
             }
         }
+
+        ClearDynamicTrails();
 
         startPositions = new Vector3[numLines];
         trailRenderers = new TrailRenderer[numLines];
@@ -130,6 +144,107 @@ public class LorenzAttractor : MonoBehaviour
             currentPositions[i] = currentPosition;
             trailRenderers[i].transform.position = currentPosition * scale + offset;
         }
+        
+        
+        // Check for mouse input
+        if (Input.GetMouseButtonDown(0) && !IsPointerOverUIElement()) // 0 is left mouse button
+        {
+            SpawnTrailAtMousePosition();
+        }
+
+        // Update dynamic trails
+        for (int i = dynamicTrails.Count - 1; i >= 0; i--)
+        {
+            if (dynamicTrails[i] == null)
+            {
+                dynamicTrails.RemoveAt(i);
+                continue;
+            }
+
+            Vector3 currentPosition = dynamicPositions[i];
+            
+            for (int j = 0; j < numPoints; j++)
+            {
+                float dx = sigma * (currentPosition.y - currentPosition.x) * dt;
+                float dy = (currentPosition.x * (rho - currentPosition.z) - currentPosition.y) * dt;
+                float dz = (currentPosition.x * currentPosition.y - beta * currentPosition.z) * dt;
+
+                currentPosition += new Vector3(dx, dy, dz) * speed * Time.deltaTime;
+            }
+            
+            dynamicPositions[i] = currentPosition;
+            dynamicTrails[i].transform.position = currentPosition * scale + offset;
+        }
+        
+    }
+    
+    private bool IsPointerOverUIElement()
+    {
+        PointerEventData eventDataCurrentPosition = new PointerEventData(EventSystem.current);
+        eventDataCurrentPosition.position = new Vector2(Input.mousePosition.x, Input.mousePosition.y);
+        List<RaycastResult> results = new List<RaycastResult>();
+        EventSystem.current.RaycastAll(eventDataCurrentPosition, results);
+        return results.Count > 0;
+    }
+    
+    private void SpawnTrailAtMousePosition()
+    {
+        if (dynamicTrails.Count >= maxTrails)
+        {
+            Destroy(dynamicTrails[0].gameObject);
+            dynamicTrails.RemoveAt(0);
+            dynamicPositions.RemoveAt(0);
+        }
+
+        // Create a plane that represents the current view of the Lorenz attractor
+        Plane attractorPlane = new Plane(mainCamera.transform.forward, offset);
+
+        // Cast a ray from the mouse position into the scene
+        Ray ray = mainCamera.ScreenPointToRay(Input.mousePosition);
+
+        float enter = 0.0f;
+        if (attractorPlane.Raycast(ray, out enter))
+        {
+            // Get the point where the ray intersects the plane
+            Vector3 hitPoint = ray.GetPoint(enter);
+
+            // Adjust for scale and offset
+            Vector3 localPosition = (hitPoint - offset) / scale;
+
+            GameObject newLine = new GameObject("Dynamic Trail");
+            newLine.transform.parent = transform;
+
+            TrailRenderer newTrail = newLine.AddComponent<TrailRenderer>();
+            newTrail.time = numPoints * dt;
+            newTrail.startWidth = trailWidth * 5f;
+            newTrail.endWidth = trailWidth;
+            newTrail.material = new Material(Shader.Find("Sprites/Default"));
+
+            Color trailColor = Random.ColorHSV(0f, 1f, 0.5f, 1f, 0.5f, 1f);
+            Gradient gradient = new Gradient();
+            gradient.SetKeys(
+                new GradientColorKey[] { new GradientColorKey(trailColor, 0.0f), new GradientColorKey(trailColor, 1.0f) },
+                new GradientAlphaKey[] { new GradientAlphaKey(1.0f, 0.0f), new GradientAlphaKey(0.0f, 1.0f) }
+            );
+            newTrail.colorGradient = gradient;
+
+            newLine.transform.position = localPosition * scale + offset;
+            dynamicTrails.Add(newTrail);
+            dynamicPositions.Add(localPosition);
+        }
+    }
+    
+    public void ClearDynamicTrails()
+    {
+        foreach (var trail in dynamicTrails)
+        {
+            if (trail != null)
+            {
+                Destroy(trail.gameObject);
+            }
+        }
+        dynamicTrails.Clear();
+        dynamicPositions.Clear();
     }
     
     
