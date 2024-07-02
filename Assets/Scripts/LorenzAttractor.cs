@@ -147,7 +147,7 @@ public class LorenzAttractor : MonoBehaviour
         
         
         // Check for mouse input
-        if (Input.GetMouseButtonDown(0) && !IsPointerOverUIElement()) // 0 is left mouse button
+        if (Input.GetMouseButtonDown(1) && !IsPointerOverUIElement()) // 0 is left mouse button
         {
             SpawnTrailAtMousePosition();
         }
