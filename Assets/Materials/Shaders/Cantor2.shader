@@ -7,6 +7,8 @@ Shader "Custom/CantorDust3D"
         _Color2 ("Color 2", Color) = (0, 0, 0, 1)
         _Scale ("Scale", Float) = 1
         _Shape ("Fractal Density", Range(0.01, 5)) = 0.15
+        _LightDistance ("_LightDistance", float) = 1
+        _Roundness ("_Roundness", float) = 0.1
     }
     SubShader
     {
@@ -33,6 +35,9 @@ Shader "Custom/CantorDust3D"
             fixed4 _Color2;
             float _Scale;
             float _Shape;
+            float _LightDistance;
+            float _Roundness;
+            float _LightState;
 
             struct v2f {
                 float4 position : SV_POSITION;
@@ -50,7 +55,7 @@ Shader "Custom/CantorDust3D"
 
             float ebox(float3 p, float3 b) {
                 float3 q = abs(p) - b;
-                return length(max(q, 0)) + min(max(q.x, max(q.y, q.z)), 0);
+                return length(max(q, 0)) + min(max(q.x, max(q.y, q.z)), 0) - _Roundness / _Iterations;
             }
 
             float cantorDust(float3 p, float3 s, int iter) {
@@ -116,9 +121,9 @@ Shader "Custom/CantorDust3D"
 
                 // Three rotating lights with different colors
                 float sphereRadius = 5.0;
-                float3 lightPos1 = smoothRotation(float3(1.2, 2.3, 3.4), time) * 100.0;
-                float3 lightPos2 = smoothRotation(float3(4.5, 5.6, 6.7), time) * 100.0;
-                float3 lightPos3 = smoothRotation(float3(7.8, 8.9, 9.0), time) * 100.0;
+                float3 lightPos1 = smoothRotation(float3(1.2, 2.3, 3.4), _LightState) * 120.0;
+                float3 lightPos2 = smoothRotation(float3(4.5, 5.6, 6.7), _LightState) * 120.0;
+                float3 lightPos3 = smoothRotation(float3(7.8, 8.9, 9.0), _LightState) * 120.0;
                 
                 float3x3 rotationMatrixX = float3x3(
                     1, 0, 0,
@@ -182,9 +187,9 @@ Shader "Custom/CantorDust3D"
                             float dist2 = length(lightPos2 - p);
                             float dist3 = length(lightPos3 - p);
 
-                            float atten1 = lightAttenuation(dist1, 5.0, 250.0);
-                            float atten2 = lightAttenuation(dist2, 5.0, 250.0);
-                            float atten3 = lightAttenuation(dist3, 5.0, 250.0);
+                            float atten1 = lightAttenuation(dist1, 5.0, _LightDistance);
+                            float atten2 = lightAttenuation(dist2, 5.0, _LightDistance);
+                            float atten3 = lightAttenuation(dist3, 5.0, _LightDistance);
 
                             float t = distance(p, ro) / _MaxDistance;
                             color = lerp(_Color1, _Color2, t);
