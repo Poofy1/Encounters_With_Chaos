@@ -7,8 +7,6 @@ Shader "Unlit/HenonMap"
         _C ("C", Float) = 1
         _D ("D", Float) = 1
         _Iterations ("Iterations", Int) = 50
-        _Color1 ("_Color1", Color) = (0, 0, 0, 1)
-        _Color2 ("_Color2", Color) = (0, 0, 0, 1)
         _Zoom ("Zoom", Float) = 1.0
         _Offset ("Offset", Vector) = (0, 0, 0, 0)
         _Thickness ("Thickness", Range(0.001, 0.1)) = 0.005
@@ -47,8 +45,6 @@ Shader "Unlit/HenonMap"
             float _Zoom;
             float2 _Offset;
             float _Thickness;
-            float4 _Color1;
-            float4 _Color2;
 
             v2f vert (appdata v)
             {
@@ -110,9 +106,29 @@ Shader "Unlit/HenonMap"
 
 
             
-            fixed4 frag (v2f o) : SV_Target
+            float3 hsv2rgb(float3 c)
             {
-                float2 uv = o.uv * 2 - 1;
+                float4 K = float4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
+                float3 p = abs(frac(c.xxx + K.xyz) * 6.0 - K.www);
+                return c.z * lerp(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);
+            }
+
+            float3 getColor(float t, float offset)
+            {
+                float hue = frac(t + offset);
+                float sat = lerp(0.5, 0.8, sin(t * 3.14159 * 2) * 0.5 + 0.5);
+                float val = lerp(0.7, 1.0, sin(t * 3.14159 * 4) * 0.5 + 0.5);
+                return hsv2rgb(float3(hue, sat, val));
+            }
+
+            float antialias(float d, float2 pixelSize)
+            {
+                return smoothstep(0.5, -0.5, d / length(pixelSize));
+            }
+
+            fixed4 frag (v2f i) : SV_Target
+            {
+                float2 uv = i.uv * 2 - 1;
                 
                 float r = 2;
                 float3 ro = float3(r * 0.955,
@@ -136,7 +152,7 @@ Shader "Unlit/HenonMap"
                 float t = 0.0;
                 float a = 0.0;
                 
-                for (int i = 0; i < 150; i++)
+                for (int i = 0; i < 120; i++)
                 {
                     if (h < 0.0001 || t > maxd) break;
                     h = scene(ro + rd * a, trap, c);
@@ -158,10 +174,20 @@ Shader "Unlit/HenonMap"
                     float fre = clamp(1.0 - dot(nor, -rd), 0.0, 1.0);
                     float spe = pow(clamp(dot(ref, lig), 0.0, 1.0), 20.0);
 
-                    float3 mat = lerp(_Color1, _Color2, fre);
+                    // Generate colors based on A, B, C, D inputs
+                    float t = frac((_A + _B + _C + _D) * 0.25);
+                    float3 color1 = getColor(t, 0.0);
+                    float3 color2 = getColor(t, 0.3);
+
+                    float3 mat = lerp(color1, color2, fre);
 
                     col += mat * (amb + dif * occ);
                     col += spe * occ;
+
+                    // Apply distance-based anti-aliasing
+                    float2 pixelSize = float2(ddx(p.x), ddy(p.y));
+                    float aa = antialias(h, pixelSize) + .5;
+                    col *= aa;
                 }
                 
                 return fixed4(col, 1.0);
