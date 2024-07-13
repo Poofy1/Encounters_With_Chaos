@@ -59,7 +59,7 @@ public class JuliaSet : MonoBehaviour
         float startB = ySlider.value;
 
         // Generate random target values for the sliders
-        float targetA = Random.Range(xSlider.minValue, xSlider.maxValue);
+        float targetA = Random.Range(xSlider.minValue, .5f);
         float targetB = Random.Range(ySlider.minValue, ySlider.maxValue);
 
         float elapsedTime = 0f;
