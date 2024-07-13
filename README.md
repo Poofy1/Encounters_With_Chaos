@@ -10,7 +10,7 @@ This Unity project is a visual demonstration of the concepts explained in the bo
 - Unity version 2022.3.6f1 or higher
 
 ## Hardware
-- This software was tested on a RTX 4080 and i7-10700KF gen
+- This software was tested on a RTX 4080 and a i7-10700KF
 - Estimated minimum specs:
    - GTX 1660 TI
    - i5-6600K
