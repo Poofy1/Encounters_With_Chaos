@@ -3,6 +3,9 @@
 This Unity project is a visual demonstration of the concepts explained in the book "Encounters With Chaos" by Denny Gulick. This involves C# scripts as well as HLSL shaders in order to fully demonstrate the mathematical theories. Many options are presented to the user to allow them to tinker with the demonstrations. 
 
 
+
+[VIDEO DEMONSTRATION](https://youtu.be/kwg85q2z-YQ)
+
 ## Requirements 
 - Unity version 2022.3.6f1 or higher
 
